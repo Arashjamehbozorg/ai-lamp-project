@@ -21,4 +21,4 @@ openapi.connect()
 
 # Getting device status
 response = openapi.get("/v1.0/devices/{}".format(DEVICE_ID))
-print(response)
+print(response["result"]["status"][0]["value"])
