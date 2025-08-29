@@ -70,20 +70,37 @@ async def main():
 
             # Read from Light module only (avoid Energy etc.)
             brightness = getattr(light, "brightness", None)
-            # Try different ways to get the on/off state
+            
+            # FIXED: Try different ways to get the on/off state with proper boolean handling
             is_on = getattr(light, "is_on", None)
             if is_on is None:
                 # Fallback to state attribute
                 state = getattr(light, "state", None)
                 if state is not None:
-                    # Extract light_on from LightState object
-                    is_on = getattr(state, "light_on", None)
-                    if is_on is None:
-                        # Another fallback - check if brightness > 0
+                    # Extract light_on from LightState object (fix the bug here)
+                    if hasattr(state, "light_on"):
+                        is_on = state.light_on
+                    elif hasattr(state, "is_on"):
+                        is_on = state.is_on
+                    else:
+                        # Check if brightness > 0 as fallback
                         is_on = brightness is not None and brightness > 0
                 else:
                     # Last fallback - check if brightness > 0
                     is_on = brightness is not None and brightness > 0
+
+            # FIXED: Ensure is_on is always a boolean, never a LightState object or string
+            if not isinstance(is_on, bool):
+                print(f"Warning: is_on is not boolean, got {type(is_on)}: {is_on}")
+                # Try to extract boolean from complex objects
+                if hasattr(is_on, "light_on"):
+                    is_on = is_on.light_on
+                elif str(is_on).lower() in ['true', '1', 'on']:
+                    is_on = True
+                elif str(is_on).lower() in ['false', '0', 'off']:
+                    is_on = False
+                else:
+                    is_on = bool(is_on)  # Convert to boolean as last resort
 
             if brightness is None:
                 # Give a helpful error if API shape differs
@@ -95,7 +112,11 @@ async def main():
             # Write only when something changed
             if brightness != last_brightness or is_on != last_is_on:
                 ts = datetime.now(BERLIN).strftime("%Y-%m-%d %H:%M:%S")
-                print(f"[{ts}] brightness={brightness} is_on={is_on}")
+                print(f"[{ts}] brightness={brightness} is_on={is_on} (type: {type(is_on)})")
+                
+                # Double-check that is_on is boolean before writing
+                assert isinstance(is_on, bool), f"is_on must be boolean, got {type(is_on)}: {is_on}"
+                
                 with csv_path.open("a", newline="") as f:
                     csv.writer(f).writerow([ts, brightness, is_on])
                 last_brightness, last_is_on = brightness, is_on
