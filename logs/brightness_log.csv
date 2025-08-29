@@ -1,0 +1,9 @@
+local_timestamp,brightness,is_on
+2025-08-13 00:52:42,42,True
+2025-08-29 13:49:22,42,"LightState(light_on=True, brightness=42, hue=None, saturation=None, color_temp=None, transition=None)"
+2025-08-29 13:50:29,42,True
+2025-08-29 13:51:47,25,True
+2025-08-29 13:51:50,68,True
+2025-08-29 13:51:53,54,True
+2025-08-29 13:51:56,34,True
+2025-08-29 13:51:59,41,True
